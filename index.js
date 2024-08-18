@@ -1,68 +1,64 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const dns = require('dns');
 const app = express();
-const bodyParser = require("body-parser");
-const urlArr = [];
 
 // Basic Configuration
-const port = process.env.PORT || 3000;
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
-app.use("/public", express.static(`${process.cwd()}/public`));
+// Static Files
+app.use('/public', express.static(`${process.cwd()}/public`));
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-// const isValidUrl = (urlString) => {
-//   var urlPattern = new RegExp(
-//     "^(https?:\\/\\/)?" + //validate protocol
-//       "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + //validate domain name
-//       "((\\d{1,3}\\.){3}\\d{1,3}))" + // validate OR ip(v4)
-//       "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + //validate port and path
-//       "(\\?[;&a-z\\d%_.~+=-]*)?" + //validate query string
-//       "(\\#[-a-z\\d_]*)?$",
-//     "i"
-//   ); //validate fragment locator
-//   return !!urlPattern.test(urlString);
-// };
-
-app.get("/", function (req, res) {
-  res.sendFile(process.cwd() + "/views/index.html");
+// Root Route
+app.get('/', (req, res) => {
+  res.sendFile(process.cwd() + '/views/index.html');
 });
 
-// Your first API endpoint
-app.get("/api/hello", function (req, res) {
-  res.json({ greeting: "hello API" });
-});
+// Short URL API Endpoint
+app.post('/api/shorturl', (req, res) => {
+  const { url } = req.body;
 
-app.post("/api/shorturl", function (req, res) {
-  const emailValid = true;
-  const originalUrl = req.body.url;
-  if (emailValid) {
-    urlArr.push(originalUrl);
-    res.status(200).json({
-      original_url: originalUrl,
-      short_url: urlArr.length,
+  // Validate URL
+  try {
+    const parsedUrl = new URL(url);
+    const hostname = parsedUrl.hostname;
+
+    // Check if the URL is reachable
+    dns.lookup(hostname, (err) => {
+      if (err) return res.json({ error: 'invalid url' });
+
+      // Generate a short URL (for simplicity, using a static ID here)
+      const shortId = 1;  // Generate unique ID logic should be here
+      res.json({
+        original_url: url,
+        short_url: shortId
+      });
     });
-  } else {
-    res.status(400).json({
-      error: "invalid url",
-    });
+  } catch {
+    res.json({ error: 'invalid url' });
   }
 });
 
-app.get("/api/shorturl/:short_url", function (req, res) {
-  const short_url = req.params.short_url - 1;
-  const original_url = urlArr[short_url];
-  if (short_url == undefined || original_url < short_url) {
-    res.status(400).json({ respond: "Bad Request" });
-  } else {
-    res.redirect(original_url);
-  }
+// Redirect Route
+app.get('/api/shorturl/:short_url', (req, res) => {
+  const { short_url } = req.params;
+
+  // Retrieve the original URL (for simplicity, using static URL here)
+  const originalUrl = 'http://example.com';  // Retrieve the actual URL using short_url
+
+  res.redirect(originalUrl);
 });
 
-app.listen(port, function () {
+// Hello API Endpoint
+app.get('/api/hello', (req, res) => {
+  res.json({ greeting: 'hello API' });
+});
+
+// Start Server
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
