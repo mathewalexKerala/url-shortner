@@ -1,8 +1,9 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const dns = require('dns');
-const { nanoid } = require('nanoid'); // To generate unique short IDs
+const dotenv = require('dotenv');
+
+dotenv.config();
 const app = express();
 
 // Basic Configuration
@@ -22,8 +23,9 @@ app.get('/', (req, res) => {
 });
 
 // Short URL API Endpoint
-app.post('/api/shorturl', (req, res) => {
+app.post('/api/shorturl', async (req, res) => {
   const { url } = req.body;
+  const { nanoid } = await import('nanoid');
 
   // Validate URL
   try {
