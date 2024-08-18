@@ -47,9 +47,9 @@ app.get('/api/shorturl/:short_url', (req, res) => {
   const { short_url } = req.params;
 
   // Retrieve the original URL (for simplicity, using static URL here)
-  const originalUrl = 'http://example.com';  // Retrieve the actual URL using short_url
+  ;  // Retrieve the actual URL using short_url
 
-  res.redirect(originalUrl);
+  res.redirect(`${req.protocol}://${req.get('host')}/${shortId}`);
 });
 
 // Hello API Endpoint
